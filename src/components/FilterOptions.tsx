@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Search } from "lucide-react";
 import { getAllAuthors, getDateRange } from '@/services/magazineService';
 import { SearchFilters } from '@/types/magazine';
 
@@ -19,6 +20,8 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter }) => {
   });
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
   const [allAuthors, setAllAuthors] = useState<string[]>([]);
+  const [authorSearchQuery, setAuthorSearchQuery] = useState<string>('');
+  const [filteredAuthors, setFilteredAuthors] = useState<string[]>([]);
   const [availableDateRange, setAvailableDateRange] = useState<{ earliest: string, latest: string }>({
     earliest: '01/20',
     latest: '12/22'
@@ -29,6 +32,19 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter }) => {
     setAllAuthors(getAllAuthors());
     setAvailableDateRange(getDateRange());
   }, []);
+
+  useEffect(() => {
+    // Filter authors based on search query
+    if (authorSearchQuery.trim() === '') {
+      setFilteredAuthors(allAuthors);
+    } else {
+      const query = authorSearchQuery.toLowerCase();
+      const filtered = allAuthors.filter(author => 
+        author.toLowerCase().includes(query)
+      );
+      setFilteredAuthors(filtered);
+    }
+  }, [authorSearchQuery, allAuthors]);
 
   const handleApplyFilters = () => {
     const filters: SearchFilters = {};
@@ -55,6 +71,7 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter }) => {
   const handleClearFilters = () => {
     setDateRange({ startDate: null, endDate: null });
     setSelectedAuthors([]);
+    setAuthorSearchQuery('');
     onFilter({});
   };
 
@@ -112,18 +129,33 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter }) => {
           <div className="grid gap-4">
             <div className="space-y-2">
               <h4 className="font-medium">Select Authors</h4>
+              <div className="relative">
+                <Input
+                  placeholder="Search authors..."
+                  value={authorSearchQuery}
+                  onChange={(e) => setAuthorSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Search className="w-4 h-4 text-avant-medium-gray" />
+                </div>
+              </div>
             </div>
             <div className="grid gap-2">
-              {allAuthors.map(author => (
-                <div key={author} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`author-${author}`} 
-                    checked={selectedAuthors.includes(author)}
-                    onCheckedChange={() => handleAuthorToggle(author)}
-                  />
-                  <Label htmlFor={`author-${author}`}>{author}</Label>
-                </div>
-              ))}
+              {filteredAuthors.length > 0 ? (
+                filteredAuthors.map(author => (
+                  <div key={author} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`author-${author}`} 
+                      checked={selectedAuthors.includes(author)}
+                      onCheckedChange={() => handleAuthorToggle(author)}
+                    />
+                    <Label htmlFor={`author-${author}`}>{author}</Label>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-2 text-avant-medium-gray">No authors found</div>
+              )}
             </div>
           </div>
         </PopoverContent>

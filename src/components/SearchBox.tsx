@@ -21,7 +21,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSearch }) => {
       <div className="relative flex items-center">
         <div className="relative flex-grow">
           <Input
-            className="avant-input w-full h-14 text-lg pl-12 font-sans"
+            className="avant-input w-full h-14 text-lg pl-12 font-['EB_Garamond',serif]"
             placeholder="Search the school magazine archive..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
