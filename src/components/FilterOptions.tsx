@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { getAllAuthors, getDateRange } from '@/services/magazineService';
 import { SearchFilters } from '@/types/magazine';
 
@@ -77,6 +77,7 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter }) => {
 
   return (
     <div className="w-full max-w-3xl mx-auto mt-4 flex flex-wrap items-center justify-center gap-4">
+      {/* Date range popover */}
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" className="border-avant-black">
@@ -119,13 +120,14 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter }) => {
         </PopoverContent>
       </Popover>
 
+      {/* Authors popover - modified for better handling of many authors */}
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" className="border-avant-black">
             Authors
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="avant-card w-80 max-h-[300px] overflow-y-auto">
+        <PopoverContent className="avant-card w-80">
           <div className="grid gap-4">
             <div className="space-y-2">
               <h4 className="font-medium">Select Authors</h4>
@@ -140,23 +142,48 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter }) => {
                   <Search className="w-4 h-4 text-avant-medium-gray" />
                 </div>
               </div>
-            </div>
-            <div className="grid gap-2">
-              {filteredAuthors.length > 0 ? (
-                filteredAuthors.map(author => (
-                  <div key={author} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`author-${author}`} 
-                      checked={selectedAuthors.includes(author)}
-                      onCheckedChange={() => handleAuthorToggle(author)}
-                    />
-                    <Label htmlFor={`author-${author}`}>{author}</Label>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-2 text-avant-medium-gray">No authors found</div>
+              {filteredAuthors.length > 0 && (
+                <p className="text-xs text-avant-medium-gray">
+                  Showing {filteredAuthors.length} of {allAuthors.length} authors
+                </p>
               )}
             </div>
+            
+            <ScrollArea className="h-[200px] rounded-md border p-2">
+              <div className="grid gap-2 pr-3">
+                {filteredAuthors.length > 0 ? (
+                  filteredAuthors.map(author => (
+                    <div key={author} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`author-${author}`} 
+                        checked={selectedAuthors.includes(author)}
+                        onCheckedChange={() => handleAuthorToggle(author)}
+                      />
+                      <Label htmlFor={`author-${author}`} className="truncate w-full cursor-pointer">
+                        {author}
+                      </Label>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-2 text-avant-medium-gray">No authors found</div>
+                )}
+              </div>
+            </ScrollArea>
+
+            {selectedAuthors.length > 0 && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-avant-medium-gray">
+                  {selectedAuthors.length} author{selectedAuthors.length !== 1 ? 's' : ''} selected
+                </span>
+                <Button 
+                  variant="ghost" 
+                  className="h-auto p-0 text-xs hover:text-avant-black" 
+                  onClick={() => setSelectedAuthors([])}
+                >
+                  Clear selection
+                </Button>
+              </div>
+            )}
           </div>
         </PopoverContent>
       </Popover>
