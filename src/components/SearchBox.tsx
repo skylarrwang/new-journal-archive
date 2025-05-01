@@ -18,19 +18,21 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSearch }) => {
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto">
-      <div className="relative">
-        <Input
-          className="avant-input w-full h-14 text-lg pl-12"
-          placeholder="Search the school magazine archive..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-          <Search className="w-5 h-5 text-avant-medium-gray" />
+      <div className="relative flex items-center">
+        <div className="relative flex-grow">
+          <Input
+            className="avant-input w-full h-14 text-lg pl-12 font-sans"
+            placeholder="Search the school magazine archive..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+            <Search className="w-5 h-5 text-avant-medium-gray" />
+          </div>
         </div>
         <Button 
           type="submit"
-          className="avant-btn absolute right-0 inset-y-0 px-6"
+          className="avant-btn h-14 px-6 ml-[-1px]"
         >
           Search
         </Button>

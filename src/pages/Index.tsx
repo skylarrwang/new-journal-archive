@@ -106,16 +106,29 @@ const Index = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-16">
             {/* Left Column: Results */}
             <div className="space-y-6">
-              <h2 className="avant-subheading">Results</h2>
+              <h2 className="avant-subheading flex items-center">
+                <span>Results</span>
+                {isLoading && (
+                  <span className="ml-2 inline-flex items-center text-avant-medium-gray animate-pulse-slow">
+                    <span className="ml-2 text-sm">Generating response...</span>
+                  </span>
+                )}
+              </h2>
               
               {isLoading ? (
-                <LoadingState />
+                <div className="animate-fade-in">
+                  <LoadingState />
+                </div>
               ) : ragResponse ? (
-                <RAGResults response={ragResponse} onSelectDocument={handleSelectDocument} />
+                <div className="animate-fade-in">
+                  <RAGResults response={ragResponse} onSelectDocument={handleSelectDocument} />
+                </div>
               ) : documents.length > 0 ? (
-                <DocumentList documents={documents} onSelectDocument={handleSelectDocument} />
+                <div className="animate-fade-in">
+                  <DocumentList documents={documents} onSelectDocument={handleSelectDocument} />
+                </div>
               ) : (
-                <div className="text-center py-12">
+                <div className="text-center py-12 animate-fade-in">
                   <p className="text-avant-medium-gray">No results found</p>
                 </div>
               )}
