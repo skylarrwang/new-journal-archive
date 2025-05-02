@@ -1,13 +1,13 @@
-
 export interface MagazineEntry {
-  pub_date: string; // "MM/YY" format
-  link_to_pdf: string;
-  volume: number;
-  issue: number;
+  pub_date: string;      // "MM/YY" format
+  link_to_pdf: string;   // PDF link
+  volume: number;        // number
+  issue: number;         // number
   author: string;
   title: string;
-  page: number;
-  id?: string; // Unique identifier for each entry
+  page: number;         // number
+  id?: string;          // optional
+  text: string;
 }
 
 export interface RAGChunk {

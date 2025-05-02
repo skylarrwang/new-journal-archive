@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import SearchBox from '@/components/SearchBox';
 import FilterOptions from '@/components/FilterOptions';
@@ -7,7 +6,7 @@ import RAGResults from '@/components/RAGResults';
 import PDFViewer from '@/components/PDFViewer';
 import LoadingState from '@/components/LoadingState';
 import { MagazineEntry, RAGResponse, SearchFilters } from '@/types/magazine';
-import { searchByFilters, performRagSearch } from '@/services/magazineService';
+import { generateRAGResponse, searchByFiltersNoQuery } from '@/services/magazineService';
 import { Separator } from '@/components/ui/separator';
 
 const Index = () => {
@@ -32,7 +31,8 @@ const Index = () => {
     setHasSearched(true);
 
     try {
-      const response = await performRagSearch(query, currentFilters);
+      console.log('Generating RAG response for query:', query);
+      const response = await generateRAGResponse(query, currentFilters);
       setRagResponse(response);
       
       // Select the first document from citations if available
@@ -41,6 +41,11 @@ const Index = () => {
       }
     } catch (error) {
       console.error('Error performing RAG search:', error);
+      // Show error state to user
+      setRagResponse({
+        answer: "Sorry, there was an error processing your request. Please try again.",
+        citations: []
+      });
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +60,7 @@ const Index = () => {
     setHasSearched(true);
 
     try {
-      const results = await searchByFilters(filters);
+      const results = await searchByFiltersNoQuery(filters);
       setDocuments(results);
       
       // Select the first document if available
@@ -80,16 +85,16 @@ const Index = () => {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="pt-16 pb-10 px-4 text-center">
-        <h1 className="avant-heading mb-2">SCHOOL MAGAZINE ARCHIVE</h1>
+        <h1 className="avant-heading mb-2">THE NEW JOURNAL ARCHIVE SEARCH</h1>
         <p className="avant-subheading text-avant-medium-gray max-w-xl mx-auto">
-          Search the digital archive of our school magazine publications
+          Ask a question or search the archive of The New Journal
         </p>
       </header>
 
       {/* Search Interface */}
       <div className="container max-w-7xl mx-auto px-4">
         <div className="mb-12">
-          <SearchBox onSearch={handleSearch} />
+          <SearchBox onSearch={handleSearch} hasSearched={hasSearched} />
           <FilterOptions onFilter={handleFilter} />
         </div>
 

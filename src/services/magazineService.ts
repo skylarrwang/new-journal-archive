@@ -1,166 +1,193 @@
-
-import { MagazineEntry, RAGResponse, SearchFilters } from "@/types/magazine";
+import { MagazineEntry, RAGResponse, SearchFilters } from "../types/magazine.ts";
+import { searchQdrant } from './qdrantService.ts';
 
 // Mock data for development
 const mockMagazineEntries: MagazineEntry[] = [
   {
-    pub_date: "01/20",
-    link_to_pdf: "https://drive.google.com/file/d/15iIvy4_WwmTmY3Cl1vOPaqPZjxqaBogH/view?usp=sharing",
-    volume: 1,
+    pub_date: "09/1990",
+    link_to_pdf: "https://drive.google.com/file/d/1wBYZbK0w6qnJuTS5itZ_oYx9B6-qRDO6/view?usp=sharing",
+    volume: 23,
     issue: 1,
-    author: "Jane Smith",
-    title: "The Future of Education",
+    author: "Motoko Rich",
+    title: "High Stakes in a House Divided",
     page: 12,
-    id: "1"
+    id: "1",
+    text: ""
   },
   {
-    pub_date: "05/20",
+    pub_date: "02/1975",
     link_to_pdf: "https://drive.google.com/file/d/15iIvy4_WwmTmY3Cl1vOPaqPZjxqaBogH/view?usp=sharing",
-    volume: 1,
-    issue: 2,
-    author: "John Doe",
-    title: "Technology in Schools",
-    page: 5,
-    id: "2"
+    volume: 8,
+    issue: 4,
+    author: "Jem Winer",
+    title: "The Experience of Directing",
+    page: 12,
+    id: "2",
+    text: ""
   },
   {
-    pub_date: "09/20",
+    pub_date: "09/2020",
     link_to_pdf: "https://drive.google.com/file/d/15iIvy4_WwmTmY3Cl1vOPaqPZjxqaBogH/view?usp=sharing",
     volume: 1,
     issue: 3,
     author: "Alice Johnson",
     title: "Art Education",
     page: 23,
-    id: "3"
+    id: "3",
+    text: "This is a test text"
   },
   {
-    pub_date: "01/21",
-    link_to_pdf: "https://drive.google.com/file/d/15iIvy4_WwmTmY3Cl1vOPaqPZjxqaBogH/view?usp=sharing",
-    volume: 2,
-    issue: 1,
-    author: "Mark Williams",
-    title: "Sports in Curriculum",
-    page: 8,
-    id: "4"
+    pub_date: "01/1987",
+    link_to_pdf: "https://drive.google.com/file/d/1pjA-UMHkbtwgwjAaOdKk4b_B3w65V7hH/view?usp=sharing",
+    volume: 19,
+    issue: 4,
+    author: "Jennifer Fleissner",
+    title: "Not For Women Only",
+    page: 12,
+    id: "4",
+    text: ""
   },
   {
-    pub_date: "05/21",
+    pub_date: "01/2012",
     link_to_pdf: "https://drive.google.com/file/d/15iIvy4_WwmTmY3Cl1vOPaqPZjxqaBogH/view?usp=sharing",
-    volume: 2,
-    issue: 2,
-    author: "Sarah Brown",
-    title: "Reading Habits",
-    page: 15,
-    id: "5"
-  },
-  {
-    pub_date: "09/21",
-    link_to_pdf: "https://drive.google.com/file/d/15iIvy4_WwmTmY3Cl1vOPaqPZjxqaBogH/view?usp=sharing",
-    volume: 2,
+    volume: 44,
     issue: 3,
-    author: "James Wilson",
-    title: "Digital Literacy",
-    page: 32,
-    id: "6"
+    author: "Aaron Gertler",
+    title: "Secrets Are No Fun",
+    page: 12,
+    id: "5",
+    text: ""
+  },
+  {
+    pub_date: "12/1981",
+    link_to_pdf: "https://drive.google.com/file/d/1wKC2wzhekwsboL5c-Hgw1RVcnb4Ht7zB/view?usp=sharing",
+    volume: 14,
+    issue: 3,
+    author: "Timothy B. Safford",
+    title: "Confessions of a divinity student",
+    page: 12,
+    id: "6",
+    text: ""
   }
 ];
 
-// Parse date string in MM/YY format into a Date object
-const parseDate = (dateStr: string): Date => {
-  const [month, year] = dateStr.split('/');
-  return new Date(2000 + parseInt(year), parseInt(month) - 1);
+
+// search by filters with NO QUERY
+export const searchByFiltersNoQuery = async (filters?: SearchFilters): Promise<MagazineEntry[]> => {
+  // check if filters are empty
+  if (!filters || Object.keys(filters).length === 0) return mockMagazineEntries;
+  try {
+    const response = await fetch('/api/filter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(filters || {})
+    });
+
+    if (!response.ok) {
+      console.error('Error searching articles:', await response.text());
+      return [];
+    }
+
+    const { articles } = await response.json();
+
+    return articles.map(article => ({
+      pub_date: article.publication_date,
+      link_to_pdf: article.pdf_link,
+      volume: article.volume,
+      issue: article.issue,
+      author: article.author,
+      title: article.title,
+      page: article.page ?? 0,
+      id: article.id ?? "",
+      text: ""
+    }));
+  } catch (error) {
+    console.error('Error in searchByFiltersNoQuery:', error);
+    return [];
+  }
 };
 
-// Filter entries based on search criteria
-const filterEntries = (filters?: SearchFilters): MagazineEntry[] => {
-  if (!filters) return mockMagazineEntries;
-  
-  return mockMagazineEntries.filter(entry => {
-    // Filter by date range
-    if (filters.dateRange) {
-      const entryDate = parseDate(entry.pub_date);
-      if (filters.dateRange.startDate) {
-        const startDate = parseDate(filters.dateRange.startDate);
-        if (entryDate < startDate) return false;
-      }
-      if (filters.dateRange.endDate) {
-        const endDate = parseDate(filters.dateRange.endDate);
-        if (entryDate > endDate) return false;
-      }
-    }
+export const generateRAGResponse = async (query: string, filters?: SearchFilters): Promise<RAGResponse> => {
+  try {
+    console.log('Starting generateRAGResponse with query:', query);
     
-    // Filter by authors
-    if (filters.authors && filters.authors.length > 0) {
-      if (!filters.authors.includes(entry.author)) return false;
-    }
+    const searchResults = await searchQdrant(query, filters);
+    console.log('Search results received:', searchResults);
     
-    return true;
-  });
-};
-
-// Mock RAG response
-const mockRagResponse: RAGResponse = {
-  answer: "The school magazine has covered various educational topics including technology integration in schools, digital literacy, and the future of education. There has been significant discussion about how technology is changing traditional learning environments and the importance of developing digital literacy skills for students. Authors have explored both the benefits and challenges of educational technology.",
-  citations: [
-    {
-      text: "Technology is transforming education by providing new tools for interactive learning.",
-      source: mockMagazineEntries[1]
-    },
-    {
-      text: "Digital literacy has become an essential skill for students in the modern educational landscape.",
-      source: mockMagazineEntries[5]
-    },
-    {
-      text: "Future educational models will likely blend traditional methods with technology-enhanced approaches.",
-      source: mockMagazineEntries[0]
+    if (searchResults.length === 0) {
+      return {
+        answer: "No relevant content found in the archive for your query.",
+        citations: []
+      };
     }
-  ]
+
+    const context = searchResults.map((result, index) => {
+      return `[${index + 1}] From "${result.payload.title}" (${result.payload.pub_date}): ${result.payload.text}`;
+    }).join('\n\n');
+
+    const prompt = `
+    Question: ${query}
+    
+    Context from The New Journal Archive:
+    ${context}
+
+    Instructions:
+    1. You can draw from both the provided context and your general knowledge to provide comprehensive answers.
+    2. When discussing specific information from The New Journal Archive, you MUST cite the sources using [1], [2], etc., corresponding to the numbered context passages above.
+    3. You may incorporate general knowledge or broader context, but clearly distinguish between what comes from The New Journal Archive (with citations) and what is general knowledge.
+    4. Be specific about which parts of your answer come from the archive versus general knowledge.
+    5. IMPORTANT: Respond with ONLY raw JSON, no markdown formatting, no code blocks. The response must be a valid JSON object in this exact structure:
+    {
+      "answer": "Your detailed answer that uses citations [1], [2] etc. when referencing archive content, clearly indicates general context, and weaves together archive citations and general knowledge naturally",
+      "citations": [
+        {
+          "citation_number": 1,
+          "text": "The exact quote from the archive that supports your point",
+          "source_index": 0
+        }
+      ]
+    }`;
+
+    // Call backend API instead of Gemini directly
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Generation failed: ${response.statusText}`);
+    }
+
+    const { text } = await response.json();
+    const parsedResponse = JSON.parse(text);
+
+    return {
+      answer: parsedResponse.answer,
+      citations: parsedResponse.citations.map(citation => ({
+        text: citation.text,
+        source: searchResults[citation.source_index].payload
+      }))
+    };
+  } catch (error) {
+    console.error('Error in generateRAGResponse:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to generate response');
+  }
 };
 
-// Get all unique authors from the dataset
-export const getAllAuthors = (): string[] => {
-  const authors = new Set<string>();
-  mockMagazineEntries.forEach(entry => authors.add(entry.author));
-  return Array.from(authors);
-};
-
-// Get date range of the dataset
-export const getDateRange = (): { earliest: string; latest: string } => {
-  let earliestDate = parseDate(mockMagazineEntries[0].pub_date);
-  let latestDate = parseDate(mockMagazineEntries[0].pub_date);
-  
-  mockMagazineEntries.forEach(entry => {
-    const entryDate = parseDate(entry.pub_date);
-    if (entryDate < earliestDate) earliestDate = entryDate;
-    if (entryDate > latestDate) latestDate = entryDate;
-  });
-  
-  return {
-    earliest: `${String(earliestDate.getMonth() + 1).padStart(2, '0')}/${String(earliestDate.getFullYear() - 2000).padStart(2, '0')}`,
-    latest: `${String(latestDate.getMonth() + 1).padStart(2, '0')}/${String(latestDate.getFullYear() - 2000).padStart(2, '0')}`
-  };
-};
-
-// Simulates a search with filters only (no RAG)
-export const searchByFilters = async (filters?: SearchFilters): Promise<MagazineEntry[]> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return filterEntries(filters);
-};
-
-// Simulates a RAG query
-export const performRagSearch = async (query: string, filters?: SearchFilters): Promise<RAGResponse> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  // In a real implementation, this would:
-  // 1. Calculate embedding for query
-  // 2. Query Qdrant Cloud with the embedding and filters
-  // 3. Get relevant chunks
-  // 4. Call Gemini API with these chunks
-  // 5. Return formatted response with citations
-  
-  return mockRagResponse;
+// Test function
+export const testRAG = async (query: string) => {
+  try {
+    console.log('Testing RAG with query:', query);
+    const response = await generateRAGResponse(query);
+    console.log('Response:', JSON.stringify(response, null, 2));
+    return response;
+  } catch (error) {
+    console.error('Test failed:', error);
+    throw error;
+  }
 };
 
 // Convert Google Drive link to embedded viewer URL

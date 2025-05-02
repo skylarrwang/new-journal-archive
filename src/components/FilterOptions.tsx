@@ -6,11 +6,35 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getAllAuthors, getDateRange } from '@/services/magazineService';
 import { SearchFilters } from '@/types/magazine';
+
+interface AuthorObj {
+  display_name: string;
+  name_variations: string[];
+}
 
 interface FilterOptionsProps {
   onFilter: (filters: SearchFilters) => void;
+}
+
+function formatDateInput(value: string): string {
+  // Remove all non-digits
+  const digits = value.replace(/\D/g, '');
+  if (digits.length === 0) return '';
+  if (digits.length <= 2) return digits; // Just month
+  if (digits.length <= 6) {
+    // Insert slash after month
+    return `${digits.slice(0, 2)}/${digits.slice(2, 6)}`;
+  }
+  // Limit to MM/YYYY
+  return `${digits.slice(0, 2)}/${digits.slice(2, 6)}`;
+}
+
+function isValidDateInput(value: string): boolean {
+  // Must match MM/YYYY
+  if (!/^\d{2}\/\d{4}$/.test(value)) return false;
+  const [month, year] = value.split('/').map(Number);
+  return month >= 1 && month <= 12 && year > 1000;
 }
 
 const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter }) => {
@@ -19,30 +43,28 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter }) => {
     endDate: null
   });
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
-  const [allAuthors, setAllAuthors] = useState<string[]>([]);
+  const [allAuthors, setAllAuthors] = useState<AuthorObj[]>([]);
   const [authorSearchQuery, setAuthorSearchQuery] = useState<string>('');
-  const [filteredAuthors, setFilteredAuthors] = useState<string[]>([]);
-  const [availableDateRange, setAvailableDateRange] = useState<{ earliest: string, latest: string }>({
-    earliest: '01/20',
-    latest: '12/22'
-  });
+  const [filteredAuthors, setFilteredAuthors] = useState<AuthorObj[]>([]);
 
   useEffect(() => {
-    // Load available authors and date range
-    setAllAuthors(getAllAuthors());
-    setAvailableDateRange(getDateRange());
+    fetch('/authors.json')
+      .then(res => res.json())
+      .then((data) => {
+        setAllAuthors(data); // data is an array of { display_name, name_variations }
+      });
   }, []);
 
   useEffect(() => {
-    // Filter authors based on search query
     if (authorSearchQuery.trim() === '') {
       setFilteredAuthors(allAuthors);
     } else {
       const query = authorSearchQuery.toLowerCase();
-      const filtered = allAuthors.filter(author => 
-        author.toLowerCase().includes(query)
+      setFilteredAuthors(
+        allAuthors.filter(authorObj =>
+          authorObj.display_name.toLowerCase().includes(query)
+        )
       );
-      setFilteredAuthors(filtered);
     }
   }, [authorSearchQuery, allAuthors]);
 
@@ -54,17 +76,23 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter }) => {
     }
     
     if (selectedAuthors.length > 0) {
-      filters.authors = selectedAuthors;
+      const selectedVariations = allAuthors
+        .filter(authorObj => selectedAuthors.includes(authorObj.display_name))
+        .flatMap(authorObj => authorObj.name_variations);
+      filters.authors = selectedVariations;
     }
+    
+    console.log('Selected Authors:', selectedAuthors);
+    console.log('Filters to send:', filters);
     
     onFilter(filters);
   };
 
-  const handleAuthorToggle = (author: string) => {
-    setSelectedAuthors(prev => 
-      prev.includes(author) 
-        ? prev.filter(a => a !== author) 
-        : [...prev, author]
+  const handleAuthorToggle = (displayName: string) => {
+    setSelectedAuthors(prev =>
+      prev.includes(displayName)
+        ? prev.filter(a => a !== displayName)
+        : [...prev, displayName]
     );
   };
 
@@ -89,7 +117,7 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter }) => {
             <div className="space-y-2">
               <h4 className="font-medium">Select Date Range</h4>
               <p className="text-sm text-avant-medium-gray">
-                Format: MM/YY (e.g., 01/20)
+                Format: MM/YYYY (e.g., 03/2020)
               </p>
             </div>
             <div className="grid gap-2">
@@ -99,9 +127,17 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter }) => {
                   <Input
                     id="startDate"
                     className="avant-input"
-                    placeholder={availableDateRange.earliest}
+                    placeholder="MM/YYYY"
                     value={dateRange.startDate || ''}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value || null }))}
+                    onChange={(e) => {
+                      const formatted = formatDateInput(e.target.value);
+                      setDateRange(prev => ({ ...prev, startDate: formatted || null }));
+                    }}
+                    onBlur={(e) => {
+                      if (e.target.value && !isValidDateInput(e.target.value)) {
+                        setDateRange(prev => ({ ...prev, startDate: null }));
+                      }
+                    }}
                   />
                 </div>
                 <div className="space-y-1">
@@ -109,9 +145,17 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter }) => {
                   <Input
                     id="endDate"
                     className="avant-input"
-                    placeholder={availableDateRange.latest}
+                    placeholder="MM/YYYY"
                     value={dateRange.endDate || ''}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value || null }))}
+                    onChange={(e) => {
+                      const formatted = formatDateInput(e.target.value);
+                      setDateRange(prev => ({ ...prev, endDate: formatted || null }));
+                    }}
+                    onBlur={(e) => {
+                      if (e.target.value && !isValidDateInput(e.target.value)) {
+                        setDateRange(prev => ({ ...prev, endDate: null }));
+                      }
+                    }}
                   />
                 </div>
               </div>
@@ -151,21 +195,22 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter }) => {
             
             <ScrollArea className="h-[200px] rounded-md border p-2">
               <div className="grid gap-2 pr-3">
-                {filteredAuthors.length > 0 ? (
-                  filteredAuthors.map(author => (
-                    <div key={author} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`author-${author}`} 
-                        checked={selectedAuthors.includes(author)}
-                        onCheckedChange={() => handleAuthorToggle(author)}
-                      />
-                      <Label htmlFor={`author-${author}`} className="truncate w-full cursor-pointer">
-                        {author}
-                      </Label>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-2 text-avant-medium-gray">No authors found</div>
+                {filteredAuthors.slice(0, 50).map(authorObj => (
+                  <div key={authorObj.display_name} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`author-${authorObj.display_name}`} 
+                      checked={selectedAuthors.includes(authorObj.display_name)}
+                      onCheckedChange={() => handleAuthorToggle(authorObj.display_name)}
+                    />
+                    <Label htmlFor={`author-${authorObj.display_name}`} className="truncate w-full cursor-pointer">
+                      {authorObj.display_name}
+                    </Label>
+                  </div>
+                ))}
+                {filteredAuthors.length > 50 && (
+                  <div className="text-center py-2 text-avant-medium-gray">
+                    Showing first 50 of {filteredAuthors.length} authors. Refine your search.
+                  </div>
                 )}
               </div>
             </ScrollArea>
