@@ -40,20 +40,27 @@ const RAGResults: React.FC<RAGResultsProps> = ({ response, onSelectDocument }) =
                 className="w-full justify-start text-left py-2 h-auto border-avant-black hover:bg-secondary"
                 onClick={() => onSelectDocument(citation.source)}
               >
-                <div className="flex flex-wrap items-center w-full gap-x-2 gap-y-1 text-sm">
-                  <div className="flex items-center min-w-0">
-                    <FileText className="h-3 w-3 mr-1" />
-                    <span className="break-words">{citation.source.title}</span>
+                <div className="flex flex-wrap items-center w-full gap-x-2">
+                  <FileText className="h-3 w-2 flex-shrink-0" />
+                  <span className="break-words whitespace-normal">
+                    {citation.source.title?.trim() ? citation.source.title : "None!"}
+                  </span>
+                  <div className="flex items-center">
+                    <User className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                    <span className="break-words whitespace-normal">
+                      {citation.source.author?.trim() ? citation.source.author : "None!"}
+                    </span>
                   </div>
-                  <div className="mx-1">•</div>
-                  <div className="flex items-center min-w-0">
-                    <User className="h-3 w-3 mr-1" />
-                    <span className="break-words">{citation.source.author}</span>
-                  </div>
-                  <div className="mx-1">•</div>
-                  <div className="flex items-center min-w-0">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    <span>{citation.source.pub_date}</span>
+                  <div className="flex items-center">
+                    <Calendar className="h-3 w-3 mr-2 flex-shrink-0" />
+                    <span className="break-words whitespace-normal">
+                      {citation.source.pub_date?.trim()
+                        ? (() => {
+                            const [year, month] = citation.source.pub_date.split('-');
+                            return (month && year) ? `${month}/${year}` : "None";
+                          })()
+                        : "none"}
+                    </span>
                   </div>
                 </div>
               </Button>
