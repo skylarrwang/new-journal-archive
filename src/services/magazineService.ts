@@ -130,7 +130,7 @@ export const generateRAGResponse = async (query: string, filters?: SearchFilters
   try {
     console.log('Starting generateRAGResponse with query:', query);
     
-    const searchResults = await searchQdrant(query, filters, 10);
+    const searchResults = await searchQdrant(query, filters, 20);
     console.log('Search results received:', searchResults);
     
     if (searchResults.length === 0) {

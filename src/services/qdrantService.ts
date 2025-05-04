@@ -64,7 +64,7 @@ async function getEmbedding(text: string): Promise<number[]> {
   return embedding;
 }
 
-export const searchQdrant = async (query: string, filters?: SearchFilters, limit: number = 10): Promise<SearchResult[]> => {
+export const searchQdrant = async (query: string, filters?: SearchFilters, limit: number = 50): Promise<SearchResult[]> => {
   try {
     console.log('Starting search with query:', query);
     

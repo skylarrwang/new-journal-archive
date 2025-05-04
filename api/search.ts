@@ -3,6 +3,7 @@ import { QdrantClient } from '@qdrant/js-client-rest';
 
 // Constants
 const COLLECTION_NAME = "new_journal_chunks";
+const MIN_SCORE = 0.4;
 
 // Validate environment variables
 const QDRANT_URL = process.env.QDRANT_CLOUD_URL;
@@ -64,7 +65,8 @@ export default async function handler(
   }
 
   try {
-    const { vector, limit = 10, filter } = req.body;
+    // Set default limit to 50
+    const { vector, limit = 50, filter } = req.body;
 
     if (!vector || !Array.isArray(vector)) {
       return res.status(400).json({ error: 'Invalid vector format' });
@@ -81,9 +83,11 @@ export default async function handler(
     console.log('Search params:', JSON.stringify(searchParams["filter"], null, 2));
     const searchResults = await qdrant.search(COLLECTION_NAME, searchParams);
 
-    console.log(`Search successful. Found ${searchResults.length} results`);
-    // console.log('SEARCH RESULTS: ', searchResults)
-    res.json(searchResults);
+    // Filter results by minimum similarity score of 0.3
+    const filteredResults = searchResults.filter(result => result.score >= MIN_SCORE);
+
+    console.log(`Search successful. Found ${filteredResults.length} results`);
+    res.json(filteredResults);
   } catch (error) {
     console.error('Search error:', error);
     if (error instanceof Error && 'data' in error) {
