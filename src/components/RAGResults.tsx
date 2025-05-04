@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { RAGResponse, MagazineEntry } from '@/types/magazine';
 import { Button } from "@/components/ui/button";
@@ -41,18 +40,18 @@ const RAGResults: React.FC<RAGResultsProps> = ({ response, onSelectDocument }) =
                 className="w-full justify-start text-left py-2 h-auto border-avant-black hover:bg-secondary"
                 onClick={() => onSelectDocument(citation.source)}
               >
-                <div className="flex flex-col sm:flex-row items-start sm:items-center w-full gap-2 text-sm">
-                  <div className="flex items-center">
+                <div className="flex flex-wrap items-center w-full gap-x-2 gap-y-1 text-sm">
+                  <div className="flex items-center min-w-0">
                     <FileText className="h-3 w-3 mr-1" />
-                    <span>{citation.source.title}</span>
+                    <span className="break-words">{citation.source.title}</span>
                   </div>
-                  <div className="hidden sm:block mx-1">•</div>
-                  <div className="flex items-center">
+                  <div className="mx-1">•</div>
+                  <div className="flex items-center min-w-0">
                     <User className="h-3 w-3 mr-1" />
-                    <span>{citation.source.author}</span>
+                    <span className="break-words">{citation.source.author}</span>
                   </div>
-                  <div className="hidden sm:block mx-1">•</div>
-                  <div className="flex items-center">
+                  <div className="mx-1">•</div>
+                  <div className="flex items-center min-w-0">
                     <Calendar className="h-3 w-3 mr-1" />
                     <span>{citation.source.pub_date}</span>
                   </div>

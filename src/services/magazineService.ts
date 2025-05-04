@@ -10,7 +10,7 @@ const mockMagazineEntries: MagazineEntry[] = [
     issue: 1,
     author: "Motoko Rich",
     title: "High Stakes in a House Divided",
-    page: 12,
+    page: 10,
     id: "1",
     text: ""
   },
@@ -68,12 +68,23 @@ const mockMagazineEntries: MagazineEntry[] = [
     page: 12,
     id: "6",
     text: ""
+  },
+  {
+    pub_date: "03/24",
+    link_to_pdf: "https://drive.google.com/file/d/1oKAZ0rIWsdiP5OM0vGMsRA5d7XbfUYyb/view?usp=sharing",
+    volume: 56,
+    issue: 4,
+    author: "Ai-Li Hollander",
+    title: "Tax Break",
+    page: 43,
+    id: "7",
+    text: ""
   }
 ];
 
-
 // search by filters with NO QUERY
 export const searchByFiltersNoQuery = async (filters?: SearchFilters): Promise<MagazineEntry[]> => {
+  console.log('In searchByFiltersNoQuery, filters:', filters);
   // check if filters are empty
   if (!filters || Object.keys(filters).length === 0) return mockMagazineEntries;
   try {
@@ -89,8 +100,16 @@ export const searchByFiltersNoQuery = async (filters?: SearchFilters): Promise<M
     }
 
     const { articles } = await response.json();
-
-    return articles.map(article => ({
+    // convert YYYY-MM-01 to MM/YYYY
+    const formattedArticles = articles.map(article => {
+      // Ensure publication_date is a string and in the expected format
+      const [year, month] = article.publication_date.split('-');
+      return {
+        ...article,
+        publication_date: `${month}/${year}`,
+      };
+    });
+    return formattedArticles.map(article => ({
       pub_date: article.publication_date,
       link_to_pdf: article.pdf_link,
       volume: article.volume,

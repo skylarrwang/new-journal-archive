@@ -61,6 +61,8 @@ const Index = () => {
 
     try {
       const results = await searchByFiltersNoQuery(filters);
+      // print the dates
+      console.log("DATES: ", results.map(result => result.pub_date));
       setDocuments(results);
       
       // Select the first document if available

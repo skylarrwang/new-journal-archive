@@ -120,10 +120,10 @@ function buildFilter(filters: SearchFilters): Filter | undefined {
     };
     
     if (filters.dateRange.startDate) {
-      rangeCondition.range.gte = filters.dateRange.startDate;
+      rangeCondition.range.gte = toShortYear(filters.dateRange.startDate);
     }
     if (filters.dateRange.endDate) {
-      rangeCondition.range.lte = filters.dateRange.endDate;
+      rangeCondition.range.lte = toShortYear(filters.dateRange.endDate);
     }
     
     must.push(rangeCondition);
@@ -141,4 +141,11 @@ function buildFilter(filters: SearchFilters): Filter | undefined {
   }
 
   return must.length > 0 ? { must } : undefined;
+}
+
+function toShortYear(dateStr: string): string {
+  // Expects MM/YYYY, returns MM/YY with zero-padded month
+  const [month, year] = dateStr.split('/');
+  if (!month || !year) return dateStr;
+  return `${month.padStart(2, '0')}/${year.slice(-2)}`;
 }
