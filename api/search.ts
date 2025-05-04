@@ -4,6 +4,8 @@ import { QdrantClient } from '@qdrant/js-client-rest';
 // Constants
 const COLLECTION_NAME = "new_journal_chunks";
 const MIN_SCORE = 0.4;
+const MIN_SCORE_FLOOR = 0.3;
+const SCORE_STEP = 0.2;
 
 // Validate environment variables
 const QDRANT_URL = process.env.QDRANT_CLOUD_URL;
@@ -84,9 +86,26 @@ export default async function handler(
     const searchResults = await qdrant.search(COLLECTION_NAME, searchParams);
 
     // Filter results by minimum similarity score of 0.3
-    const filteredResults = searchResults.filter(result => result.score >= MIN_SCORE);
+    let filteredResults: any[] = [];
+    let currentMinScore = MIN_SCORE;
 
-    console.log(`Search successful. Found ${filteredResults.length} results`);
+    do {
+      filteredResults = searchResults.filter(result => result.score >= currentMinScore);
+      if (filteredResults.length > 0 || currentMinScore <= MIN_SCORE_FLOOR) {
+        break;
+      }
+      currentMinScore = Math.max(currentMinScore - SCORE_STEP, MIN_SCORE_FLOOR);
+    } while (currentMinScore >= MIN_SCORE_FLOOR);
+
+    if (filteredResults.length === 0) {
+      console.warn('No relevant results found after filtering.');
+      return res.status(404).json({
+        error: 'No relevant results found',
+        message: 'No results met the minimum similarity score threshold.'
+      });
+    }
+
+    console.log(`Search successful. Found ${filteredResults.length} results with min score ${currentMinScore}`);
     res.json(filteredResults);
   } catch (error) {
     console.error('Search error:', error);

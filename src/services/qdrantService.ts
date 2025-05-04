@@ -76,16 +76,19 @@ export const searchQdrant = async (query: string, filters?: SearchFilters, limit
     const built_filter = buildFilter(filters);
     console.log("AFTER BUILDING FILTERS: ", built_filter)
 
+    const requestBody: any = {
+      vector: queryEmbedding,
+      limit,
+      ...(built_filter ? { filter: built_filter } : {})
+    };
+
+    console.log("REQUEST BODY: ", requestBody)
     const response = await fetch(`${API_URL}/search`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        vector: queryEmbedding,
-        limit,
-        filter: built_filter
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {

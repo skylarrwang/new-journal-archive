@@ -40,7 +40,7 @@ const Index = () => {
         setSelectedDocument(response.citations[0].source);
       }
     } catch (error) {
-      console.error('Error performing RAG search:', error);
+      console.error('Index.tsx: Error performing RAG search:', error);
       // Show error state to user
       setRagResponse({
         answer: "Sorry, there was an error processing your request. Please try again.",
