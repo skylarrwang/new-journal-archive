@@ -78,10 +78,11 @@ export default async function handler(
       ...(filter ? { filter } : {})
     };
 
-    console.log('Search params:', JSON.stringify(searchParams, null, 2));
+    console.log('Search params:', JSON.stringify(searchParams["filter"], null, 2));
     const searchResults = await qdrant.search(COLLECTION_NAME, searchParams);
 
     console.log(`Search successful. Found ${searchResults.length} results`);
+    // console.log('SEARCH RESULTS: ', searchResults)
     res.json(searchResults);
   } catch (error) {
     console.error('Search error:', error);

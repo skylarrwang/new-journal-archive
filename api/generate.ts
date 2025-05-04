@@ -59,7 +59,7 @@ export default async function handler(
       return res.status(400).json({ error: 'Prompt is required' });
     }
 
-    console.log('Generating content with prompt:', prompt.substring(0, 100) + '...');
+    // console.log('Generating content with prompt:', prompt.substring(0, 100) + '...');
 
     // Add safety settings if needed
     const result = await model.generateContent({
@@ -74,11 +74,11 @@ export default async function handler(
 
     const response = await result.response;
     const rawText = response.text();
-    console.log('Raw response from Gemini:', rawText);
+    //console.log('Raw response from Gemini:', rawText);
 
     // Clean the response text
     const cleanedJson = cleanJsonString(rawText);
-    console.log('Cleaned JSON string:', cleanedJson);
+    // console.log('Cleaned JSON string:', cleanedJson);
 
     try {
       const parsedJson = JSON.parse(cleanedJson);

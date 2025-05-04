@@ -73,6 +73,9 @@ export const searchQdrant = async (query: string, filters?: SearchFilters, limit
     console.log('Query embedding received from backend');
 
     console.log('Fetching search results');
+    const built_filter = buildFilter(filters);
+    console.log("AFTER BUILDING FILTERS: ", built_filter)
+
     const response = await fetch(`${API_URL}/search`, {
       method: 'POST',
       headers: {
@@ -81,7 +84,7 @@ export const searchQdrant = async (query: string, filters?: SearchFilters, limit
       body: JSON.stringify({
         vector: queryEmbedding,
         limit,
-        filters: filters ? buildFilter(filters) : undefined
+        filter: built_filter
       })
     });
 
@@ -121,9 +124,11 @@ function buildFilter(filters: SearchFilters): Filter | undefined {
     
     if (filters.dateRange.startDate) {
       rangeCondition.range.gte = toShortYear(filters.dateRange.startDate);
+      console.log("START DATE AFTER CONVERTING: ", rangeCondition.range.gte)
     }
     if (filters.dateRange.endDate) {
       rangeCondition.range.lte = toShortYear(filters.dateRange.endDate);
+      console.log("END DATE AFTER CONVERTING: ", rangeCondition.range.lte)
     }
     
     must.push(rangeCondition);
@@ -139,13 +144,23 @@ function buildFilter(filters: SearchFilters): Filter | undefined {
     };
     must.push(matchCondition);
   }
-
+  console.log("RETURNED FILTERS: ", must)
   return must.length > 0 ? { must } : undefined;
 }
 
 function toShortYear(dateStr: string): string {
-  // Expects MM/YYYY, returns MM/YY with zero-padded month
-  const [month, year] = dateStr.split('/');
-  if (!month || !year) return dateStr;
-  return `${month.padStart(2, '0')}/${year.slice(-2)}`;
+  // Expects MM/YY or MM/YYYY, returns YYYY-MM-DD with zero-padded month
+  const [month, yearRaw] = dateStr.split('/');
+  if (!month || !yearRaw) return dateStr;
+
+  let year = yearRaw;
+  if (year.length === 2) {
+    const yearNum = parseInt(year, 10);
+    if (yearNum > 25) {
+      year = `19${year}`;
+    } else {
+      year = `20${year.padStart(2, '0')}`;
+    }
+  }
+  return `${year}-${month.padStart(2, '0')}-01`;
 }
