@@ -196,19 +196,6 @@ export const generateRAGResponse = async (query: string, filters?: SearchFilters
   }
 };
 
-// Test function
-export const testRAG = async (query: string) => {
-  try {
-    console.log('Testing RAG with query:', query);
-    const response = await generateRAGResponse(query);
-    console.log('Response:', JSON.stringify(response, null, 2));
-    return response;
-  } catch (error) {
-    console.error('Test failed:', error);
-    throw error;
-  }
-};
-
 // Convert Google Drive link to embedded viewer URL
 export const getEmbedUrl = (driveLink: string): string => {
   // Extract the file ID from a Google Drive link
