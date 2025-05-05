@@ -6,7 +6,7 @@
 
 ## Running Locally
 **Step 1: Clone the repository using the project's Git URL**
-`gh repo clone skylarrwang/avant-garde-inkwell-search`
+`gh repo clone skylarrwang/new-journal-archive`
 
 **Step 2: Install the necessary dependencies.**
 `npm i`
